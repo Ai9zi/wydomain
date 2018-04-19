@@ -30,14 +30,23 @@ def gen_ips(start, end):
 	# if num & 0xff 过滤掉 最后一段为 0 的IP
 	return [num2ip(num) for num in range(start, end + 1) if num & 0xff]
 
+def ip_check(ip):
+	'''检查IP是否合规'''
+	q = ip.split('.')
+	return len(q) == 4 and len(filter(lambda x: x >= 0 and x <= 255, \
+		map(int, filter(lambda x: x.isdigit(), q)))) == 4
+
 def make_ips_c_block(ipaddr):
+	'''生成C段IP地址'''
 	address = {}
 	ipaddr = ipaddr.split('.')
-	ipaddr[3] = '0'
-	ipaddr = '.'.join(ipaddr)
-
-	address[ipaddr] = gen_ips(ip2num(ipaddr),ip2num(ipaddr) + 254)
-	return address
+	if len(ipaddr) > 3:
+		ipaddr[3] = '0'
+		ipaddr = '.'.join(ipaddr)
+		address[ipaddr] = gen_ips(ip2num(ipaddr),ip2num(ipaddr) + 254)
+		return address
+	else:
+		return {}
 
 def func(ipaddr):
 	reverse_result = {'bing':{},'aizhan':{}}
@@ -61,6 +70,16 @@ def func(ipaddr):
 	return reverse_result
 
 def ip2domain_start(ip_blocks):
+
+	# 只接受/24结尾的IP段，其它抛弃
+	if not ip_blocks.endswith('/24'):
+		return {}
+
+	# 只接受IP合规校验通过的，其它抛弃
+	ip4txt = ip_blocks.split('/')[0] # 处理掉RFC的IP段标准
+	if not ip_check(ip4txt):
+		return {}
+
 	# ip_blocks = '113.108.16.0/24'
 	ip4txt = ip_blocks.split('/')[0] # 处理掉RFC的IP段标准
 	ip4txt = ip4txt.split('.')

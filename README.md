@@ -22,7 +22,7 @@
 
 二、提升执行速度<br />
 wydomain_ip2domain.py 第71行，修改processes=你认为能接受的进程数<br />
-> 多进程，服务器要是好的话，可以提高，问题是bing.com可能会因为频率过高被封
+> 多进程，服务器要是好的话，可以提高，问题是bing.com可能会因为频率过高被封<br />
 > pool = multiprocessing.Pool(processes=10)
 
 BUG反馈
@@ -30,11 +30,15 @@ BUG反馈
 > 微博：http://weibo.com/ringzero<br />
 > 邮箱：ringzero@0x557.org<br />
 
+新版本结果演示
+-----------------------------------
+> http://wydomain.wuyun.org/report/result_xiaomi.com,xiaomi.cn,duokan.com.html
+
 扫描结果演示
 -----------------------------------
-> http://wydomain.wuyun.org/report/result_wooyun.org.html
-> http://wydomain.wuyun.org/report/result_yiche.com.html
-> http://wydomain.wuyun.org/report/result_ablesky.com.html
+> http://wydomain.wuyun.org/report/result_wooyun.org.html<br />
+> http://wydomain.wuyun.org/report/result_yiche.com.html<br />
+> http://wydomain.wuyun.org/report/result_ablesky.com.html<br />
     
 
 运行环境

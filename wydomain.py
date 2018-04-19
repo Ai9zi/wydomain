@@ -65,9 +65,9 @@ def start_wydomain(domain):
 			wydomains['soa'][pdomain] = []
 			
 			# 开始逐个处理FOFA域名查询的结果信息
-			for subdomain in fofa_result['partner'][pdomain]['domain']:
+			for subdomain in fofa_result['partner'][pdomain]['domains']:
 				 wydomains['domain'][pdomain][subdomain] = get_a_record(subdomain)
-			for ipaddr in fofa_result['partner'][pdomain]['ipaddr']:
+			for ipaddr in fofa_result['partner'][pdomain]['ipaddrs']:
 				ipaddr = ipaddr.split('.')
 				ipaddr[-1] = '0/24'
 				ipaddr = '.'.join(ipaddr)
@@ -139,11 +139,13 @@ def start_wydomain(domain):
 						ipaddr = '.'.join(ipaddr)
 						wydomains['ipaddress'][ipaddr] = {}
 				
-				# 使用bing、aizhan接口查询
-				for ip_c_block in wydomains['ipaddress']:
-					ip2domain_result = ip2domain_start(ip_c_block)
-					for ipaddress in ip2domain_result.keys():
-						wydomains['ipaddress'][ip_c_block][ipaddress] = ip2domain_result[ipaddress]
+				# 生成一个子域名的IP地址，继续处理其它域名，获得更多的IP，再统一递归查询
+				# # 进入IP地址转换成C段，并查询整个C段IP绑定列表
+				# for ip_c_block in wydomains['ipaddress']:
+				# 	if not check_ip_whitelist(ip_c_block):
+				# 		ip2domain_result = ip2domain_start(ip_c_block)
+				# 		for ipaddress in ip2domain_result.keys():
+				# 			wydomains['ipaddress'][ip_c_block][ipaddress] = ip2domain_result[ipaddress]
 
 				# 处理完毕，等待数据可视化后处理 wydomains 数组
 
@@ -179,11 +181,14 @@ def start_wydomain(domain):
 				for ipaddr in subdomains_result['ipaddress']:
 					wydomains['ipaddress'][ipaddr] = {}
 
-				# 进入IP地址转换成C段，并查询整个C段IP绑定列表
-				for ip_c_block in wydomains['ipaddress']:
-					ip2domain_result = ip2domain_start(ip_c_block)
-					for ipaddress in ip2domain_result.keys():
-						wydomains['ipaddress'][ip_c_block][ipaddress] = ip2domain_result[ipaddress]
+				# 获取并处理了传递进来的子域名可得到的信息，全部结束后，统一用bing.com、aizhan.com查询C段IP域名信息
+
+		# 进入IP地址转换成C段，并查询整个C段IP绑定列表
+		for ip_c_block in wydomains['ipaddress']:
+			if not check_ip_whitelist(ip_c_block):
+				ip2domain_result = ip2domain_start(ip_c_block)
+				for ipaddress in ip2domain_result.keys():
+					wydomains['ipaddress'][ip_c_block][ipaddress] = ip2domain_result[ipaddress]
 
 	else:
 		# 没有兄弟域名
@@ -260,12 +265,14 @@ def start_wydomain(domain):
 						ipaddr[-1] = '0/24'
 						ipaddr = '.'.join(ipaddr)
 						wydomains['ipaddress'][ipaddr] = {}
-				
-				# 使用bing、aizhan接口查询
+
+				# 进入IP地址转换成C段，并查询整个C段IP绑定列表
 				for ip_c_block in wydomains['ipaddress']:
-					ip2domain_result = ip2domain_start(ip_c_block)
-					for ipaddress in ip2domain_result.keys():
-						wydomains['ipaddress'][ip_c_block][ipaddress] = ip2domain_result[ipaddress]
+					# 检查IP是否是内网IP，如果是，别查询了
+					if not check_ip_whitelist(ip_c_block):
+						ip2domain_result = ip2domain_start(ip_c_block)
+						for ipaddress in ip2domain_result.keys():
+							wydomains['ipaddress'][ip_c_block][ipaddress] = ip2domain_result[ipaddress]
 
 				# 处理完毕，等待数据可视化后处理 wydomains 数组
 
@@ -303,9 +310,11 @@ def start_wydomain(domain):
 
 				# 进入IP地址转换成C段，并查询整个C段IP绑定列表
 				for ip_c_block in wydomains['ipaddress']:
-					ip2domain_result = ip2domain_start(ip_c_block)
-					for ipaddress in ip2domain_result.keys():
-						wydomains['ipaddress'][ip_c_block][ipaddress] = ip2domain_result[ipaddress]
+					# 检查IP是否是内网IP，如果是，别查询了
+					if not check_ip_whitelist(ip_c_block):
+						ip2domain_result = ip2domain_start(ip_c_block)
+						for ipaddress in ip2domain_result.keys():
+							wydomains['ipaddress'][ip_c_block][ipaddress] = ip2domain_result[ipaddress]
 
 	# 生成数据时，将MX、NS、SOA项去重
 	for mx_domain in wydomains['mx'].keys():
@@ -321,13 +330,14 @@ def start_wydomain(domain):
 	try:
 		file_object = open(filepath, 'w')
 		file_object.writelines(html_content)
+		file_object.close()
 	except Exception, e:
 		return "error"
 	finally:
 		print '-' * 50
 		print "* Report is generated"
 		print '-' * 50
-		file_object.close()
+		# file_object.close()
 
 	return wydomains
 
